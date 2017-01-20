@@ -1,20 +1,15 @@
-//add amazon api requests
 var util = require('util');
-var apac = require( 'apac');
+var apac = require('apac');
 var fs = require( 'fs');
-//var connection = require('../../db/index.js')
-
 var cred = JSON.parse(fs.readFileSync( __dirname + '/../../config.json', 'utf8')).amazon;
-
 var AmazonResponse;
 var opHelper = new apac.OperationHelper ({
   awsId: cred.key,
   awsSecret: cred.secret,
-  assocId: 'donannarni-20',
+  assocId: cred.tag,
 });
 
 module.exports = {
-
   fetchClothes: function(req, res, next) {
     opHelper.execute('ItemSearch', {
       'SearchIndex': 'Fashion',
@@ -22,30 +17,27 @@ module.exports = {
       'ResponseGroup': 'Images,ItemAttributes',
       'ItemPage': req.body.page
     }).then((response) => {
-        //console.log("Results object: ", response.result.ItemSearchResponse.Items.Item[0]);
-        // console.log("Raw response body: ", response.responseBody);
-    /*//creates MYsql insertion query syntax for dummy data
-        var clothingSchema = "INSERT INTO `clothing` (detailUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, Title, UPC, ASIN) VALUES (" + '"' + response.result.ItemSearchResponse.Items.Item[0].DetailPageURL + '", "' + response.result.ItemSearchResponse.Items.Item[0].SmallImage.URL + '", "' + response.result.ItemSearchResponse.Items.Item[0].MediumImage.URL + '", "' + response.result.ItemSearchResponse.Items.Item[0].LargeImage.URL + '", "' + response.result.ItemSearchResponse.Items.Item[0].ItemAttributes.Brand + '", "' + response.result.ItemSearchResponse.Items.Item[0].ItemAttributes.Color + '", "' +response.result.ItemSearchResponse.Items.Item[0].ItemAttributes.Department + '", "' + response.result.ItemSearchResponse.Items.Item[0].ItemAttributes.ListPrice.FormattedPrice + '", "'+ response.result.ItemSearchResponse.Items.Item[0].ItemAttributes.ProductGroup + '", "' + response.result.ItemSearchResponse.Items.Item[0].ItemAttributes.ProductTypeName + '", "' + response.result.ItemSearchResponse.Items.Item[0].ItemAttributes.Title + '", "' + response.result.ItemSearchResponse.Items.Item[0].ItemAttributes.UPC + '", "' + response.result.ItemSearchResponse.Items.Item[0].ASIN + '");'
-        fs.writeFileSync(__dirname+"/clothingInsertionSchema.txt", clothingSchema)
-      */
       AmazonResponse = response.result.ItemSearchResponse.Items.Item;
-      var images = [];
+      
+      var clothing = [];
       for (var i = 0; i < AmazonResponse.length; i++) {
-        if (AmazonResponse[i].LargeImage) {
-          images.push(AmazonResponse[i].LargeImage.URL);
+        if (AmazonResponse[i].LargeImage && AmazonResponse[i].ImageSets && AmazonResponse[i].ImageSets.ImageSet[0] && AmazonResponse[i].ImageSets.ImageSet[0].ThumbnailImage ) {
+          clothing.push({
+            largeImg: AmazonResponse[i].LargeImage.URL,  
+            detailPageUrl: AmazonResponse[i].DetailPageURL, 
+            productTypeName: AmazonResponse[i].ItemAttributes.ProductTypeName, 
+            title: AmazonResponse[i].ItemAttributes.Title, 
+            asin: AmazonResponse[i].ASIN, 
+            upc: AmazonResponse[i].ItemAttributes.UPC, 
+            brand: AmazonResponse[i].ItemAttributes.Brand, 
+            thumbnail: AmazonResponse[i].ImageSets.ImageSet[0].ThumbnailImage.URL, 
+            color: AmazonResponse[i].ItemAttributes.Color
+          });
         }
       }
-      console.log(images);
-      res.send(JSON.stringify(images));
+      res.json(clothing);
     }).catch((err) => {
       console.error('Something went wrong!', err);
     });
   }
 };
-
-
-
-
-
-
-

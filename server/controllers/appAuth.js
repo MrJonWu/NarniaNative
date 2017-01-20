@@ -1,10 +1,9 @@
-var connection = require('../../db/index.js');
 require('dotenv').config();
+var connection = require('../../db/index.js');
 var dbUser = require('./appUsers');
 
 module.exports = {
-
-  // Originally written for desktop - possibly should be deleted
+  // Originally written for desktop
   login: function(req, res, next) {
     var username = req.body.username;
     var password = req.body.password;
@@ -22,8 +21,7 @@ module.exports = {
       }
     });
   },
-
-  // Originally written for desktop - possibly should be deleted
+  // Originally written for desktop
   signup: function(req, res, next) {
     connection.query({
       sql: 'SELECT * FROM `users` WHERE `username` = ?',
@@ -50,7 +48,6 @@ module.exports = {
       }
     });
   },
-
   mobileFbLogin: function(req, res, next) {
     var body = JSON.parse(req.body._bodyText);
     var token = req.body.url.slice(43);
@@ -79,11 +76,9 @@ module.exports = {
       }
     });
   },
-
-  // SHOULD BE REMOVED ONCE TEST IS REWRITTEN TO US mbLogin
   findUser: function(req, res, next) {
     if (!req.body.username) {
-      res.send('no username provided');
+      res.json('no username provided');
       return;
     }
     return dbUser.getUser(req.body.username)
@@ -91,7 +86,6 @@ module.exports = {
       res.json(result);
     });
   },
-
   mbLogin: function(req, res, next) {
     if (!req.body.username || !req.body.password) {
       res.send('no username or password provided');
@@ -101,19 +95,18 @@ module.exports = {
     .then(function(result) {
       if (Array.isArray(result) && result.length > 0) {
         if (req.body.password === result[0].password) {
-          res.json({// NEED TO GIVE TOKEN AT THIS POINT
+          res.json({// GIVE TOKEN AT THIS POINT
             token: 'token',
             id: result[0].id
           });
         } else {
-          res.send('Invalid username or password.');
+          res.json('Invalid username or password.');
         }
       } else {
-        res.send('Invalid username or password.');
+        res.json('Invalid username or password.');
       }
     });
   },
-
   createUser: function(req, res, next) {
     if (!req.body.username) {
       res.json('no user information');
@@ -121,12 +114,11 @@ module.exports = {
     }
     var time = new Date();
     var newUser = {
-      name: req.body.name || null,
-      email: req.body.email || null,
-      token: req.body.token || null,
-      username: req.body.username || null,
-      password: req.body.password || null,
-      thumbnail: req.body.thumbnail || null,
+      name: req.body.name || req.body.username,
+      email: req.body.email,
+      token: req.body.token,
+      username: req.body.username,
+      password: req.body.password,
       createdAt: req.body.createdAt || time,
       updatedAt: req.body.updatedAt || time
     };
@@ -134,18 +126,17 @@ module.exports = {
     .then(function(response) {
       if (response.length === 0) {
         return dbUser.setUser(newUser)
-        .then(function(result) { // NEED TO GIVE TOKEN AT THIS POINT
+        .then(function(result) { //GIVE TOKEN AT THIS POINT
           res.json({
             token: 'token',
             id: result.insertId
           });
         });
       } else {
-        res.send('User already exists.');
+        res.json('User already exists.');
       }
     });
   },
-
   removeUser: function(req, res, next) {
     if (!req.body.username) {
       res.json('no user information');
@@ -155,7 +146,6 @@ module.exports = {
       res.json(response);
     });
   },
-
   test: function(req, res, next) {
     res.json('success');
   }

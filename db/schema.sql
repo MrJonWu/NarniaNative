@@ -1,50 +1,3 @@
--- CREATE TABLE `Users` (
---     `id` INT AUTO_INCREMENT,
---     `post_count` INT NOT NULL,
---     PRIMARY KEY (`id`)
--- );
--- CREATE TABLE `Posts` (
---     `id` INT AUTO_INCREMENT,
---     `post_id` INT NOT NULL,
---     `user_id` INT NOT NULL,
---     `body` VARCHAR(255) NOT NULL,
---     `type` VARCHAR(255) NOT NULL,
---     PRIMARY KEY (`id`)
--- );
--- CREATE TABLE `User_Posts` (
---     `id` INT AUTO_INCREMENT,
---     `user_id` INT NOT NULL,
---     `post_id` INT NOT NULL,
---     PRIMARY KEY (`id`)
--- );
--- CREATE TABLE `Tags` (
---     `id` INT AUTO_INCREMENT,
---     `name` VARCHAR(255) NOT NULL,
---     `parent` INT NOT NULL,
---     PRIMARY KEY (`id`)
--- );
--- CREATE TABLE `Tags_Join` (
---     `tag_id` INT AUTO_INCREMENT,
---     `post_id` INT NOT NULL,
---     `clothing_id` INT NOT NULL
--- );
--- CREATE TABLE `Clothing` (
---     `id` INT AUTO_INCREMENT,
---     `types` VARCHAR(255) NOT NULL,
---     `img` VARCHAR(255) NOT NULL,
---     `tags` INT NOT NULL,
---     PRIMARY KEY (`id`)
--- );
--- ALTER TABLE `Posts` ADD CONSTRAINT `Posts_fk0` FOREIGN KEY (`user_id`) REFERENCES `Users`(`id`);
--- ALTER TABLE `User_Posts` ADD CONSTRAINT `User_Posts_fk0` FOREIGN KEY (`user_id`) REFERENCES `Users`(`id`);
--- ALTER TABLE `User_Posts` ADD CONSTRAINT `User_Posts_fk1` FOREIGN KEY (`post_id`) REFERENCES `Posts`(`id`);
--- ALTER TABLE `Tags` ADD CONSTRAINT `Tags_fk0` FOREIGN KEY (`parent`) REFERENCES `Tags`(`id`);
--- ALTER TABLE `Tags_Join` ADD CONSTRAINT `Tags_Join_fk0` FOREIGN KEY (`tag_id`) REFERENCES `Tags`(`id`);
--- ALTER TABLE `Tags_Join` ADD CONSTRAINT `Tags_Join_fk1` FOREIGN KEY (`post_id`) REFERENCES `Posts`(`id`);
--- ALTER TABLE `Tags_Join` ADD CONSTRAINT `Tags_Join_fk2` FOREIGN KEY (`clothing_id`) REFERENCES `Clothing`(`id`);
--- ALTER TABLE `Clothing` ADD CONSTRAINT `Clothing_fk0` FOREIGN KEY (`tags`) REFERENCES `Tags_Join`(`tag_id`);
-
-
 DROP DATABASE IF EXISTS `Narnia`;
 CREATE DATABASE `Narnia`;
 USE `Narnia`;
@@ -54,22 +7,23 @@ USE `Narnia`;
 --
 -- ---
 
-DROP TABLE IF EXISTS `users`;
-
 CREATE TABLE `users` (
   `id` INTEGER AUTO_INCREMENT,
   `name` VARCHAR(150) NULL DEFAULT NULL,
   `email` VARCHAR(40) NULL DEFAULT NULL,
   `token` VARCHAR(255) NULL DEFAULT NULL,
   `username` VARCHAR(30) NULL DEFAULT NULL,
-  `thumbnail` VARCHAR(255) NULL DEFAULT NULL,
+  `thumbnail` VARCHAR(255) DEFAULT 'https://www.buira.org/assets/images/shared/default-profile.png',
   `password` VARCHAR(40) NULL DEFAULT NULL,
   `createdAt` VARCHAR(60) NULL DEFAULT NULL,
   `updatedAt` VARCHAR(60) NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
-DROP TABLE IF EXISTS `clothing`;
+-- ---
+-- Table 'clothing'
+--
+-- ---
 
 CREATE TABLE `clothing` (
   `id` INTEGER AUTO_INCREMENT,
@@ -77,23 +31,27 @@ CREATE TABLE `clothing` (
   `smallImg` VARCHAR(500) NULL DEFAULT NULL,
   `mediumImg` VARCHAR(500) NULL DEFAULT NULL,
   `largeImg` VARCHAR(500) NULL DEFAULT NULL,
+  `thumbnail` VARCHAR(500) NULL DEFAULT NULL,
   `brand` VARCHAR(100) NULL DEFAULT NULL,
   `color` VARCHAR(50) NULL DEFAULT NULL,
   `department` VARCHAR(50) NULL DEFAULT NULL,
-  `itemDimension` VARCHAR(255) NULL DEFAULT NULL,
   `listPrice` VARCHAR(30) NULL DEFAULT NULL,
-  `manufacturer` VARCHAR(255) NULL DEFAULT NULL,
   `productGroup` VARCHAR(100) NULL DEFAULT NULL,
   `productTypeName` VARCHAR(100) NULL DEFAULT NULL,
-  `size` VARCHAR(30) NULL DEFAULT NULL,
   `upc` VARCHAR(255) NULL DEFAULT NULL,
   `title` VARCHAR(255) NULL DEFAULT NULL,
   `asin` VARCHAR(255) NULL DEFAULT NULL,
+  `material` VARCHAR(255) NULL DEFAULT NULL,
+  `description` VARCHAR(255) NULL DEFAULT NULL,
   `position` VARCHAR(255) NULL DEFAULT NULL,
+  `tagIds` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
-DROP TABLE IF EXISTS `posts`;
+-- ---
+-- Table 'posts'
+--
+-- ---
 
 CREATE TABLE `posts` (
   `id` INTEGER AUTO_INCREMENT,
@@ -102,15 +60,46 @@ CREATE TABLE `posts` (
   `likesCount` INTEGER NULL DEFAULT NULL,
   `body` VARCHAR(255) NOT NULL,
   `shirtId` INTEGER NULL DEFAULT NULL,
-  `pantId` INTEGER NULL DEFAULT NULL, 
-  `shoesId` INTEGER NULL DEFAULT NULL, 
+  `pantId` INTEGER NULL DEFAULT NULL,
+  `shoesId` INTEGER NULL DEFAULT NULL,
   `description` VARCHAR(255) NULL DEFAULT NULL,
   `type` VARCHAR(255) NOT NULL,
   `createdAt` VARCHAR(60) NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 );
 
-DROP TABLE IF EXISTS `userPosts`;
+-- ---
+-- Table 'wardrobe'
+--
+-- ---
+
+CREATE TABLE `wardrobe` (
+  `id` INTEGER AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `clothingId` INTEGER,
+  `list` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES users(`id`),
+  FOREIGN KEY (`clothingId`) REFERENCES clothing(`id`)
+);
+
+-- ---
+-- Table 'tags'
+--
+-- ---
+
+CREATE TABLE `tags` (
+  `id` INTEGER AUTO_INCREMENT,
+  `tag` VARCHAR(255) NOT NULL,
+  `count` INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tag` (`tag`)
+);
+
+-- ---
+-- Join Table 'userPosts'
+--
+-- ---
 
 CREATE TABLE `userPosts` (
   `id` INTEGER AUTO_INCREMENT,
@@ -119,12 +108,22 @@ CREATE TABLE `userPosts` (
   PRIMARY KEY (`id`)
 );
 
+-- ---
+-- Join Table 'likesPosts'
+--
+-- ---
+
 CREATE TABLE `likesPosts` (
   `id` INTEGER AUTO_INCREMENT,
   `userId` INTEGER NOT NULL,
   `postId` INTEGER NOT NULL,
   PRIMARY KEY (`id`)
 );
+
+-- ---
+-- Join Table 'userFollowers'
+--
+-- ---
 
 CREATE TABLE `userFollowers` (
   `id` INTEGER AUTO_INCREMENT,
@@ -133,50 +132,96 @@ CREATE TABLE `userFollowers` (
   PRIMARY KEY (`id`)
 );
 
-INSERT INTO `clothing` (detailPageUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, title, upc, asin, position) VALUES ("https://www.amazon.com/Hanes-Mens-X-Temp-Performance-X-Large/dp/B0132MGK5Q%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB0132MGK5Q", "https://images-na.ssl-images-amazon.com/images/I/41-qNmknnEL._SL75_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41-qNmknnEL._SL160_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41-qNmknnEL.jpg", "Hanes", "Deep Red", "mens", "$10.00", "Apparel", "SHIRT", "Hanes Men's X-Temp Performance Polo, Deep Red, X-Large", "078715978150", "B0132MGK5Q", "top");
-INSERT INTO `clothing` (detailPageUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, title, upc, asin, position) VALUES ("https://www.amazon.com/Hanes-X-Temp-Performance-Royal-Large/dp/B0132MGJGQ%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB0132MGJGQ", "https://images-na.ssl-images-amazon.com/images/I/41dr%2BUP1D8L._SL75_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41dr%2BUP1D8L._SL160_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41dr%2BUP1D8L.jpg", "Hanes", "Deep Royal", "mens", "$10.00", "Apparel", "SHIRT", "Hanes Men's X-Temp Performance Polo, Deep Royal, Large", "078715978204", "B0132MGJGQ", "top");
-INSERT INTO `clothing` (detailPageUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, title, upc, asin, position) VALUES ("https://www.amazon.com/Hanes-STEDMAN-Blended-Jersey-XL-Deep/dp/B0009GHM0G%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB0009GHM0G", "https://images-na.ssl-images-amazon.com/images/I/31nIeEVIJLL._SL75_.jpg", "https://images-na.ssl-images-amazon.com/images/I/31nIeEVIJLL._SL160_.jpg", "https://images-na.ssl-images-amazon.com/images/I/31nIeEVIJLL.jpg", "Hanes", "Deep Forest", "mens", "$7.69", "Apparel", "SHIRT", "Hanes Men's 5.2 oz Hanes STEDMAN Blended Jersey Polo, XL-Deep Forest", "766369121700", "B0009GHM0G", "top");
-INSERT INTO `clothing` (detailPageUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, title, upc, asin, position) VALUES ("https://www.amazon.com/Dickies-Mens-Original-White-36x32/dp/B0001YRCVU%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB0001YRCVU", "https://images-na.ssl-images-amazon.com/images/I/31Q9W1KC5aL._SL75_.jpg", "https://images-na.ssl-images-amazon.com/images/I/31Q9W1KC5aL._SL160_.jpg", "https://images-na.ssl-images-amazon.com/images/I/31Q9W1KC5aL.jpg", "Dickies", "White", "mens", "$42.00", "Apparel", "PANTS", "Dickies Men's Original 874 Work Pant, White, 36x32", "029311070182", "B0001YRCVU", "mid");
-INSERT INTO `clothing` (detailPageUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, title, upc, asin, position) VALUES ("https://www.amazon.com/Southpole-Active-Basic-Jogger-Fleece/dp/B00M5963BE%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB00M5963BE", "https://images-na.ssl-images-amazon.com/images/I/41dwkR6W%2BHL._SL75_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41dwkR6W%2BHL._SL160_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41dwkR6W%2BHL.jpg", "Southpole", "Brown", "mens", "$12.99", "Apparel", "PANTS", "Southpole Men's Active Basic Jogger Fleece Pants,Brown,Large", "882272786918", "B00M5963BE", "mid");
-INSERT INTO `clothing` (detailPageUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, title, upc, asin, position) VALUES ("https://www.amazon.com/Haggar-Hidden-Expandable-Waist-Plain/dp/B000MXKMG2%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB000MXKMG2", "https://images-na.ssl-images-amazon.com/images/I/3173PKODPCL._SL75_.jpg", "https://images-na.ssl-images-amazon.com/images/I/3173PKODPCL._SL160_.jpg", "https://images-na.ssl-images-amazon.com/images/I/3173PKODPCL.jpg", "Haggar", "Black", "mens", "$34.99", "Apparel", "PANTS", "Haggar Men's Cool 18 Hidden Expandable Waist Plain Front Pant,Black,36x32", "017457641823", "B000MXKMG2", "mid");
-INSERT INTO `clothing` (detailPageUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, title, upc, asin, position) VALUES ("https://www.amazon.com/adidas-Originals-Superstar-Adicolor-Fashion/dp/B01CDOTBE6%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB01CDOTBE6", "https://images-na.ssl-images-amazon.com/images/I/41E02Hc%2Bj-L._SL75_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41E02Hc%2Bj-L._SL160_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41E02Hc%2Bj-L.jpg", "adidas", "Scarlet/Scarlet/Scarlet", "mens", "$90.00", "Shoes", "SHOES", "adidas Originals Men's Superstar Adicolor Fashion Sneaker, Scarlet/Scarlet/Scarlet, 10.5 M US", "889138613326", "B01CDOTBE6", "bottom");
-INSERT INTO `clothing` (detailPageUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, title, upc, asin, position) VALUES ("https://www.amazon.com/adidas-Originals-Gazelle-Fashion-Sneaker/dp/B01HLJWS5W%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB01HLJWS5W", "https://images-na.ssl-images-amazon.com/images/I/414ggcdSoJL._SL75_.jpg", "https://images-na.ssl-images-amazon.com/images/I/414ggcdSoJL._SL160_.jpg", "https://images-na.ssl-images-amazon.com/images/I/414ggcdSoJL.jpg", "adidas", "Green/White/Gold Met.", "mens", "$80.00", "Shoes", "SHOES", "adidas Originals Men's Gazelle Fashion Sneaker, Green/White/Gold Met, 10.5 M US", "889768181806", "B01HLJWS5W", "bottom");
-INSERT INTO `clothing` (detailPageUrl, smallImg, mediumImg, largeImg, brand, color, department, listPrice, productGroup, productTypeName, title, upc, asin, position) VALUES ("https://www.amazon.com/adidas-NEO-Baseline-Fashion-Collegiate/dp/B01A1ELRXS%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB01A1ELRXS", "https://images-na.ssl-images-amazon.com/images/I/41dLJg12AhL._SL75_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41dLJg12AhL._SL160_.jpg", "https://images-na.ssl-images-amazon.com/images/I/41dLJg12AhL.jpg", "adidas NEO", "Collegiate Navy/Tech Grey/White", "mens", "$59.95", "Shoes", "SHOES", "adidas NEO Men's Baseline Fashion Sneaker, Collegiate Navy/Tech Grey/White, 10.5 M US", "889138786556", "B01A1ELRXS", "bottom");
+-- ---
+-- Join Table 'postTags'
+--
+-- ---
 
-INSERT INTO `users` (name, email, token, username, password, thumbnail) VALUES ("Jonathan", "MrJonWu@gmail.com", "12345678910", "Jon", "password", "https://avatars1.githubusercontent.com/u/21250622?v=3&s=460");
+CREATE TABLE `postTags` (
+  `id` INTEGER AUTO_INCREMENT,
+  `postId` INTEGER NOT NULL,
+  `tagId` INTEGER NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`postId`) REFERENCES posts(`id`),
+  FOREIGN KEY (`tagId`) REFERENCES tags(`id`)
+);
+
+-- ---
+-- Seed Data
+--
+-- ---
+
+-- Users
+
+INSERT INTO `users` (name, email, token, username, password, thumbnail) VALUES ("Jon", "Jon@jon.com", "12345678910", "Jon", "password", "https://avatars1.githubusercontent.com/u/21250622?v=3&s=460");
 INSERT INTO `users` (name, email, token, username, password, thumbnail) VALUES ("Haris", "haris@haris.com", "12345678910", "Haris", "password", "https://avatars2.githubusercontent.com/u/19330576?v=3&s=460");
 INSERT INTO `users` (name, email, token, username, password, thumbnail) VALUES ("Rick", "Rick@rick.com", "12345678910", "Rick", "password", "https://avatars0.githubusercontent.com/u/20013587?v=3&s=460");
 INSERT INTO `users` (name, email, token, username, password, thumbnail) VALUES ("Zach", "Zach@zach.com", "12345678910", "Zach", "password", "https://avatars3.githubusercontent.com/u/14946412?v=3&s=460");
+INSERT INTO `users` (name, email, token, username, password, thumbnail) VALUES ("Jonathan", "jonathan@Jonathan.com", "12345678910", "Jonathan", "password", "https://s30.postimg.org/spxl38nch/sadpanda.jpg");
 
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (3, 5, "http://funnycatsgif.com/wp-content/uploads/2015/04/cat-images-funny-picture.jpg", "Check out this awesome outfit I just put together!", "image", "3456871348");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (1, 8, "http://funnycatsgif.com/wp-content/uploads/2015/04/cat-images-funny-pictures-kitties.jpg", "What am I doing with my life?", "image", "3456871349");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (2, 3, "http://www.londoubros.com/assets/mainmenu/1142/editor/cat-fashion-septem_1773575i.jpg?0.24798612928882752", "I love to dress my cat in pretty clothes.", "image", "3456871350");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (4, 9, "http://i.telegraph.co.uk/multimedia/archive/01773/cat-fashion-may_1773579i.jpg", "Hi, my name is Zach and this is my cat.", "image", "3456871351");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (3, 5, "https://s-media-cache-ak0.pinimg.com/originals/c8/4e/d1/c84ed12bf5414ef6c7ab228a2f947961.jpg", "Check out this awesome outfit I just put together this morning!", "image", "3456873348");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (1, 8, "https://ae01.alicdn.com/kf/HTB1IK3YHVXXXXcrXFXXq6xXFXXX8/Puppy-Spring-Summer-Cotton-Dogs-Vests-Clothes-White-Side-Black-Square-Dog-Vest-Pet-T-shirt.jpg_640x640.jpg", "Puppy vests? Yes please!", "image", "3436871349");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (2, 3, "http://web.tradekorea.com/upload_file2/sell/72/S00012772/Lovely_Letters_Print_Hooded_Pets_Clothing.jpg", "Check this outfit out. It's lit!", "image", "3456831350");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (4, 9, "http://cuteanimalimages.com/wp-content/uploads/2013/02/dog-wearing-coat-and-hat.jpg", "This is a cute doggy in cute clothes!", "image", "3456851351");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (3, 5, "https://ae01.alicdn.com/kf/HTB100haHVXXXXXKXpXXq6xXFXXX9/Rainbow-cute-girl-pet-dog-clothes-apparel-spring-summer-puppy-dress-clothing-for-dogs-Dog-Supplies.jpg_640x640.jpg", "Check out this awesome outfit I just put together!", "image", "3453871348");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (1, 8, "http://i01.i.aliimg.com/wsphoto/v0/1999368135_1/Fashion-cotton-superman-dog-clothes-cute-chihuahua-clothes-puppy-clothing-for-dogs-cats-chien-overall-ropa.jpg", "This outfit is fantastic!", "image", "3456874359");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (2, 3, "http://petsnstuff.info/wp-content/uploads/2015/03/New-Arrival-Lovely-Totoro-and-Lion-Design-Pet-Costume-Dog-Clothes-Puppy-Cat-Clothing-Grey-Yellow2.jpg", "Outfit, outfit, outfit, outfit, outfit!!!", "image", "5456831350");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (4, 9, "http://media.galaxant.com/000/106/409/desktop-1420820766.jpg", "Hi, my name is Zach and this is my outfit.", "image", "3476871351");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (3, 5, "http://g03.a.alicdn.com/kf/HTB1LectKFXXXXaKXVXXq6xXFXXXv/2016-Yellow-Minions-Pet-Dog-Clothes-Cartoon-Dog-Coat-Cat-Clothing-Puppy-Animals-Costume-for-Chihuahua.jpg", "Check out this awesome outfit I just put together!", "image", "3456871948");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (1, 8, "https://ae01.alicdn.com/kf/HTB1ScHbLFXXXXa1XpXXq6xXFXXX6/Funny-font-b-Pet-b-font-font-b-Cat-b-font-Pirate-font-b-Costume-b.jpg", "This is looking good so far.", "image", "3456875349");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (2, 3, "https://s-media-cache-ak0.pinimg.com/736x/ab/2e/32/ab2e32b0e8c5273372217713fb146165.jpg", "What an amazing outfit!", "image", "3456471350");
-INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (4, 9, "http://g01.a.alicdn.com/kf/HTB1NR7dLFXXXXczXpXXq6xXFXXXu/Honden-Beer-Gedrukt-Pyjama-Jas-Kat-Puppy-Cozy-Kleding-Kleding-Kleding-Kleding-Kostuum-6412.jpg", "This outfit is too cute.", "image", "5456871351");
+-- Clothing
 
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (1, 1, "Some people come into our lives and leave footprints on our hearts, while others come into our lives and make us wanna leave footprints on their face.", "comment", "3456871348");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (1, 2, "this is a comment on Rick's post by Haris", "comment", "3456871349");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (1, 4, "I am ready to meet my Maker. Whether my Maker is prepared for the great ordeal of meeting me is another matter.", "comment", "3456871350");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (2, 2, "Sorry, I can't hangout. My uncle's cousin's sister in law's best friend's insurance agent's roommate's pet goldfish died. Maybe next time.", "comment", "3456871348");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (2, 3, "Why go to college? There's Google.", "comment", "3456871349");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (2, 4, "I feel sorry for people who don't drink. When they wake up in the morning, that's as good as they're going to feel all day.", "comment", "3456871350");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (3, 1, "Don't you find it Funny that after Monday(M) and Tuesday(T), the rest of the week says WTF?", "comment", "3456871348");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (3, 3, "Microsoft bought Skype for 8.5 billion!.. what a bunch of idiots! I downloaded it for free!", "comment", "3456871349");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (3, 4, "Life is full of temporary situations, ultimately ending in a permanent solution.", "comment", "3456871350");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (4, 1, "A good lawyer knows the law; a clever one takes the judge to lunch.", "comment", "3456871348");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (4, 2, "After one look at this planet any visitor from outer space would say “I WANT TO SEE THE MANAGER.”", "comment", "3456871349");
-INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (4, 3, "The human body was designed by a civil engineer. Who else would run a toxic waste pipeline through a recreational area?", "comment", "3456871350");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, upc, asin) VALUES ("https://www.amazon.com/Neleus-Sleeve-Button-Plaid-Shirts/dp/B01KV15P1G%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB01KV15P1G", "https://images-na.ssl-images-amazon.com/images/I/41x04l7sgPL.jpg", "Neleus", "Black", "mens", "$10.00", "Apparel", "SHIRT", "712383534231", "B01KV15P1G");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, upc, asin) VALUES ("https://www.amazon.com/French-Toast-Belted-Cargo-Khaki/dp/B01GPM5W36%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB01GPM5W36", "https://images-na.ssl-images-amazon.com/images/I/41C2Zl7WKBL.jpg", "French Toast", "Khaki", "mens", "$10.00", "Apparel", "PANTS", "190444123509", "B01GPM5W36");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, upc, asin) VALUES ("https://www.amazon.com/Converse-Chuck-Taylor-Black-Canvas/dp/B0000AFSXL%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB0000AFSXL", "https://images-na.ssl-images-amazon.com/images/I/41flckPGNxL.jpg", "Converse", "Black", "mens", "$10.00", "Apparel", "SHOES", "022859473040", "B0000AFSXL");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, asin) VALUES ("https://www.amazon.com/Bienzoe-School-Uniform-sleeve-Button/dp/B01J2Y3XTE%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB01J2Y3XTE", "https://images-na.ssl-images-amazon.com/images/I/31wxP4jMODL.jpg", "Bienzoe", "White", "mens", "$10.00", "Apparel", "SHIRT", "B01J2Y3XTE");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, upc, asin) VALUES ("https://www.amazon.com/Nautica-Girls-Uniform-Stretch-Skinny/dp/B00DBNJH34%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB00DBNJH34", "https://images-na.ssl-images-amazon.com/images/I/31o48IU6QTL.jpg", "Nautica", "Navy", "mens", "$10.00", "Apparel", "PANTS", "093348511055", "B00DBNJH34");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, asin) VALUES ("https://www.amazon.com/MARC-Loafers-Classic-Oxfords-Leather/dp/B019YDXMIK%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB019YDXMIK", "https://images-na.ssl-images-amazon.com/images/I/31C6jp8wgNL.jpg", "BRUNO MARC", "Black", "mens", "$10.00", "Apparel", "SHOES", "B019YDXMIK");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, upc, asin) VALUES ("https://www.amazon.com/Guess-What-Chicken-Graphic-T-Shirt/dp/B01BE1LC6E%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB01BE1LC6E", "https://images-na.ssl-images-amazon.com/images/I/41k30cI9dAL.jpg", "Humor", "Brown", "mens", "$10.00", "Apparel", "SHIRT", "797642569056", "B01BE1LC6E");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, upc, asin) VALUES ("https://www.amazon.com/Childrens-Place-Little-Straight-Indigo/dp/B00WE4GMXO%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB00WE4GMXO", "https://images-na.ssl-images-amazon.com/images/I/41p1pBa4emL.jpg", "The Children's Place", "Indigo", "mens", "$10.00", "Apparel", "PANTS", "889705033014", "B00WE4GMXO");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, upc, asin) VALUES ("https://www.amazon.com/Skechers-Sport-Equalizer-Persistent-Sneaker/dp/B00R2KK3LW%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB00R2KK3LW", "https://images-na.ssl-images-amazon.com/images/I/41gz6bt89sL.jpg", "Skechers", "Gray", "mens", "$10.00", "Apparel", "SHOES", "889110025925", "B00R2KK3LW");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, upc, asin) VALUES ("https://www.amazon.com/Hanes-Sleeve-Raglan-Heather-X-Large/dp/B010278WAA%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB010278WAA", "https://images-na.ssl-images-amazon.com/images/I/51xx9KH--IL.jpg", "Hanes", "Gray", "mens", "$10.00", "Apparel", "SHIRT", "078715902155", "B010278WAA");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, upc, asin) VALUES ("https://www.amazon.com/Childrens-Place-Little-Uniform-Fleece/dp/B01EMLPJO4%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB01EMLPJO4", "https://images-na.ssl-images-amazon.com/images/I/31lBd8aNtlL.jpg", "The Children's Place", "Black", "mens", "$10.00", "Apparel", "PANTS", "889705210316", "B01EMLPJO4");
+INSERT INTO `clothing` (detailPageUrl, largeImg, brand, color, department, listPrice, productGroup, productTypeName, asin) VALUES ("https://www.amazon.com/PRINCE-Classic-Modern-Wingtip-PRINCE-6-BROWN/dp/B019X1IVWK%3Fpsc%3D1%26SubscriptionId%3DAKIAIYV2F3JA5VNKX37A%26tag%3Ddonannarni-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3DB019X1IVWK", "https://images-na.ssl-images-amazon.com/images/I/41%2B2bxjqk0L.jpg", "Dream Pairs", "Brown", "mens", "$10.00", "Apparel", "SHOES", "B019X1IVWK");
+
+-- Posts
+
+INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt, shirtId, pantId, shoesId) VALUES (3, 5, "https://images-na.ssl-images-amazon.com/images/I/41x04l7sgPL.jpg", "Check out this awesome outfit I put together! #stylin'", "image", "1484454916000", 1, 2, 3);
+INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt, shirtId, pantId, shoesId) VALUES (4, 3, "https://images-na.ssl-images-amazon.com/images/I/31wxP4jMODL.jpg", "Dress up. #always", "image", "1484454925000", 4, 5, 6);
+INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt, shirtId, pantId, shoesId) VALUES (2, 8, "https://images-na.ssl-images-amazon.com/images/I/41k30cI9dAL.jpg", "Worship the chicken. Worship it. #chicken", "image", "1484454934000", 7, 8, 9);
+INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt, shirtId, pantId, shoesId) VALUES (1, 23, "https://images-na.ssl-images-amazon.com/images/I/51xx9KH--IL.jpg", "Sweatpants and dress shoes go surprisingly well together. #uniq #orange4life #orangeEveryDay", "image", "1484454942000", 10, 11, 12);
+INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (1, 2, "https://s30.postimg.org/79wqlenrl/dog_wearing_coat_and_hat.jpg", "This is totally my dog. #legit", "image", "1484454942000");
+INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (3, 11, "https://ae01.alicdn.com/kf/HTB1ScHbLFXXXXa1XpXXq6xXFXXX6/Funny-font-b-Pet-b-font-font-b-Cat-b-font-Pirate-font-b-Costume-b.jpg", "Arrrrrrrrrrrrrrrrr. #cat #pirate #piratecat", "image", "1484454942000");
+INSERT INTO `posts` (userId, likesCount, body, description, type, createdAt) VALUES (4, 16, "https://s23.postimg.org/tw90t5f97/2016_Yellow_Minions_Pet_Dog_Clothes_Cartoon_Dog.jpg", "Meet my new minion.", "image", "1484454942000");
+
+-- Comments
+
+INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (1, 4, "I am ready to meet my Maker. Whether my Maker is prepared for the great ordeal of meeting me is another matter.", "comment", "1484454944000");
+INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (1, 1, "The human body was designed by a civil engineer. Who else would run a toxic waste pipeline through a recreational area?", "comment", "1484454952000");
+INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (2, 2, "Why go to college when there's Google.", "comment", "1484454946000");
+INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (2, 3, "Sorry, I can't hangout. My uncle's cousin's sister in law's best friend's insurance agent's roommate's pet goldfish died. Maybe next time.", "comment", "1484454945000");
+INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (3, 1, "Microsoft bought Skype for 8.5 billion... what a bunch of idiots! I downloaded it for free!", "comment", "1484454949000");
+INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (3, 4, "A good lawyer knows the law; a clever one takes the judge to lunch.", "comment", "1484454951000");
+INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (4, 3, "After one look at this planet any visitor from outer space would say “I WANT TO SEE THE MANAGER.”", "comment", "1484454952000");
+INSERT INTO `posts` (postId, userId, body, type, createdAt) VALUES (4, 4, "Life is full of temporary situations, ultimately ending in a permanent solution.", "comment", "1484454950000");
+
+-- Tags
+
+INSERT INTO `tags` (tag, count) VALUES ("stylin'", 1);
+INSERT INTO `tags` (tag, count) VALUES ("always", 1);
+INSERT INTO `tags` (tag, count) VALUES ("chicken", 1);
+INSERT INTO `tags` (tag, count) VALUES ("uniq", 1);
+INSERT INTO `tags` (tag, count) VALUES ("orange4life", 1);
+INSERT INTO `tags` (tag, count) VALUES ("orangeEveryDay", 1);
+INSERT INTO `tags` (tag, count) VALUES ("legit", 1);
+INSERT INTO `tags` (tag, count) VALUES ("cat", 1);
+INSERT INTO `tags` (tag, count) VALUES ("pirate", 1);
+INSERT INTO `tags` (tag, count) VALUES ("piratecat", 1);
+
+-- Post/Tags Join
+
+INSERT INTO `postTags` (postId, tagId) VALUES (1, 1);
+INSERT INTO `postTags` (postId, tagId) VALUES (2, 2);
+INSERT INTO `postTags` (postId, tagId) VALUES (3, 3);
+INSERT INTO `postTags` (postId, tagId) VALUES (4, 4);
+INSERT INTO `postTags` (postId, tagId) VALUES (4, 5);
+INSERT INTO `postTags` (postId, tagId) VALUES (4, 6);
+INSERT INTO `postTags` (postId, tagId) VALUES (5, 7);
+INSERT INTO `postTags` (postId, tagId) VALUES (6, 8);
+INSERT INTO `postTags` (postId, tagId) VALUES (6, 9);
+INSERT INTO `postTags` (postId, tagId) VALUES (6, 10);
+
+-- Followers Join
 
 INSERT INTO `userFollowers` (userId, followerId) VALUES (1, 2);
 INSERT INTO `userFollowers` (userId, followerId) VALUES (1, 3);
@@ -184,8 +229,3 @@ INSERT INTO `userFollowers` (userId, followerId) VALUES (2, 1);
 INSERT INTO `userFollowers` (userId, followerId) VALUES (2, 4);
 INSERT INTO `userFollowers` (userId, followerId) VALUES (3, 2);
 INSERT INTO `userFollowers` (userId, followerId) VALUES (3, 4);
-
--- ALTER TABLE `userPosts` ADD FOREIGN KEY (userId) REFERENCES `users` (`id`);
--- ALTER TABLE `userPosts` ADD FOREIGN KEY (postId) REFERENCES `posts` (`id`);
--- ALTER TABLE `posts` ADD FOREIGN KEY (userId) REFERENCES `users` (`id`);
-
